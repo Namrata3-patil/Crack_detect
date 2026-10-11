@@ -1,0 +1,8 @@
+crack_env/
+__pycache__/
+*.keras
+*.zip
+datasets/
+raw_images/
+test_images/
+static/uploads/

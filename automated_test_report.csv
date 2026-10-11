@@ -1,0 +1,11 @@
+Filename,True_Distance_mm,Measured_Length_mm,Measured_Width_mm
+Image1.png,200.0,83.64,0.39
+Image2.png,200.0,102.74,0.42
+Image3.png,300.0,153.56,0.85
+Image4.png,300.0,153.38,0.75
+Image5.png,500.0,260.86,1.45
+Image6.png,500.0,255.53,1.63
+Image7.png,1000.0,374.53,2.3
+Image8.png,1000.0,515.61,2.85
+Image9.jpg,200.0,0.0,0.0
+Image10.png,300.0,201.29,0.94

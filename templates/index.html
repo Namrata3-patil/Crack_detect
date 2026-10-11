@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structural Health - AI Crack Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Smooth transitions for the SVG Gauge */
+
+        .gauge-path {
+            transition: stroke-dashoffset 1s ease-in-out, stroke 1s ease-in-out;
+        }
+        /* Custom file input button styling */
+        input[type=file]::file-selector-button {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<!-- UPDATED: Beautiful soft mesh-like gradient background -->
+<body class="bg-gradient-to-br from-cyan-100 via-blue-100 to-indigo-200 text-slate-800 font-sans min-h-screen pb-12"></body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg border-b-4 border-cyan-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-cyan-500/20 p-2 rounded-lg">
+                        <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-extrabold tracking-tight">Structural Health <span class="text-cyan-400">AI</span></h1>
+                        <p class="text-sm text-slate-400 font-medium tracking-wide">Deep Learning Crack Detection & Condition Assessment</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-wider">
+                    <a href="/" class="text-cyan-400 border-b-2 border-cyan-400 pb-1">Dashboard</a>
+                    <a href="/rules" class="text-slate-400 hover:text-white transition">Inspection Rules</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+        <!-- UPDATED: Sleek, Dark "Console" Controls Section -->
+        <div class="bg-[#1e293b] rounded-3xl shadow-xl shadow-slate-300/50 p-8 flex flex-col md:flex-row gap-8 items-center border border-slate-700 relative overflow-hidden">
+            <!-- Decorative background glow -->
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex-1 w-full space-y-3 z-10">
+                <label class="text-sm font-bold text-slate-300 tracking-wide uppercase">1. Select Standoff Distance</label>
+                <select id="distanceInput" class="w-full bg-slate-900 border-2 border-slate-700 text-white text-sm rounded-xl p-3.5 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition shadow-inner appearance-none cursor-pointer">
+                    <option value="200">Close Inspection (~20 cm)</option>
+                    <option value="300" selected>Standard Inspection (~30 cm)</option>
+                    <option value="500">Medium Standoff (~50 cm)</option>
+                    <option value="1000">Far Standoff (~1.0 m)</option>
+                </select>
+            </div>
+            
+            <div class="flex-1 w-full space-y-3 z-10">
+                <label class="text-sm font-bold text-slate-300 tracking-wide uppercase">2. Upload Inspection Photo</label>
+                <input type="file" id="imageInput" accept="image/*" class="block w-full text-sm text-slate-400 file:mr-4 file:py-3.5 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-extrabold file:bg-cyan-500 file:text-white hover:file:bg-cyan-400 cursor-pointer border-2 border-slate-700 rounded-xl bg-slate-900 transition shadow-inner"/>
+            </div>
+
+            <div class="w-full md:w-auto z-10 mt-4 md:mt-0">
+                <button onclick="uploadAndAnalyze()" class="w-full md:w-64 py-4 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-white font-extrabold text-lg tracking-wider rounded-xl shadow-[0_0_20px_rgba(6,-182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,-182,212,0.5)] transition-all duration-300 transform hover:-translate-y-1">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        ANALYZE FISSURE
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Metrics Grid (3x2 Layout) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Condition Status -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center flex flex-col justify-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Condition Status</h3>
+                <div id="statusBadgeContainer" class="flex-1 flex flex-col items-center justify-center">
+                    <div id="statusBadge" class="inline-block px-6 py-2 rounded-full text-sm font-extrabold bg-slate-100 text-slate-500 shadow-sm border border-slate-200">
+                        AWAITING UPLOAD
+                    </div>
+                    <p id="detectedVal" class="text-xs text-slate-400 mt-4 font-semibold uppercase tracking-wider">System Ready</p>
+                </div>
+            </div>
+
+            <!-- SEMI-CIRCLE RISK GAUGE -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center flex flex-col justify-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-cyan-500"></div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Risk Score</h3>
+                <div class="relative w-40 h-24 mx-auto mt-2">
+                    <!-- SVG Semi-Circle -->
+                    <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible">
+                        <!-- Background Arch -->
+                        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#f1f5f9" stroke-width="12" stroke-linecap="round" />
+                        <!-- Value Arch (Dasharray is ~125.6 for a semi-circle of radius 40) -->
+                        <path id="gaugeFill" class="gauge-path" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#cbd5e1" stroke-width="12" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6" />
+                    </svg>
+                    <!-- Center Text -->
+                    <div class="absolute bottom-0 left-0 w-full text-center pb-2">
+                        <span id="riskPercentage" class="text-3xl font-extrabold text-slate-800">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crack Area -->
+            <div class="bg-blue-50/50 rounded-2xl shadow-sm border border-blue-100 p-6 text-center flex flex-col justify-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-blue-400"></div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Crack Area</h3>
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <span class="text-3xl font-extrabold text-slate-800" id="areaVal">--</span>
+                    <p class="text-xs text-slate-500 mt-2 font-medium">Total Surface Damage</p>
+                </div>
+            </div>
+
+            <!-- Length -->
+            <div class="bg-emerald-50/50 rounded-2xl shadow-sm border border-emerald-100 p-6 text-center flex flex-col justify-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-emerald-400"></div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total Length</h3>
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <span class="text-3xl font-extrabold text-slate-800" id="lengthVal">--</span>
+                    <p class="text-xs text-slate-500 mt-2 font-medium">Calculated Trajectory Span</p>
+                </div>
+            </div>
+
+            <!-- Width -->
+            <div class="bg-amber-50/50 rounded-2xl shadow-sm border border-amber-100 p-6 text-center flex flex-col justify-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-amber-400"></div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Width (Aperture)</h3>
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <span class="text-3xl font-extrabold text-slate-800" id="widthVal">--</span>
+                    <p class="text-xs text-slate-500 mt-2 font-medium">Maximum Fissure Gap</p>
+                </div>
+            </div>
+
+            <!-- Depth -->
+            <div class="bg-rose-50/50 rounded-2xl shadow-sm border border-rose-100 p-6 text-center flex flex-col justify-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-rose-400"></div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Predicted Depth</h3>
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <span class="text-3xl font-extrabold text-rose-600" id="depthVal">--</span>
+                    <p class="text-xs text-rose-400/80 mt-2 font-medium">Empirical Penetration</p>
+                </div>
+            </div>
+        </div>
+        <!-- Agentic AI Recommendations Panel -->
+<div class="bg-slate-900 rounded-2xl shadow-lg border border-cyan-500/30 p-6 relative overflow-hidden">
+    <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="flex items-center space-x-3 mb-4">
+        <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+        <h3 class="text-sm font-bold text-white uppercase tracking-widest">AI Engineering Assessment</h3>
+    </div>
+    <div id="aiAdvice" class="text-slate-300 font-medium text-sm leading-relaxed whitespace-pre-line">
+        Upload an image to generate contextual maintenance recommendations.
+    </div>
+</div>
+
+        <!-- Image Viewer Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Original Image -->
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
+                <div class="bg-slate-800 text-white px-5 py-3 text-sm font-bold flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span>Raw Original Photo</span>
+                    </div>
+                </div>
+                <div class="h-96 bg-slate-100 flex items-center justify-center relative">
+                    <img id="imgOriginal" class="h-full w-full object-contain hidden" src="" />
+                    <div id="origPlaceholder" class="text-slate-400 flex flex-col items-center">
+                        <svg class="w-12 h-12 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span class="text-sm font-bold tracking-wide uppercase">Waiting for input</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Mask Image -->
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden flex flex-col ring-1 ring-cyan-500/50">
+                <div class="bg-slate-900 text-white px-5 py-3 text-sm font-bold flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span>AI Segmentation Mask</span>
+                    </div>
+                </div>
+                <div class="h-96 bg-slate-950 flex items-center justify-center relative p-1">
+                    <img id="imgProcessed" class="h-full w-full object-contain hidden" src="" />
+                    <div id="procPlaceholder" class="text-slate-600 flex flex-col items-center">
+                        <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        <span class="text-sm font-bold tracking-wide uppercase">Model Output Area</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function uploadAndAnalyze() {
+            const input = document.getElementById('imageInput');
+            if (!input.files[0]) return alert('Please select an image file first.');
+
+            document.getElementById('procPlaceholder').innerText = "Processing via U-Net...";
+            
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+            formData.append('distance_mm', document.getElementById('distanceInput').value);
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) return alert(data.error);
+                
+                const risk = (data.risk_score !== undefined) ? data.risk_score : 0;
+                const statusText = data.status || (data.detected ? "Crack Detected" : "Optimal");
+
+                // Update Text Metrics
+                document.getElementById('riskPercentage').innerText = risk + '%';
+                document.getElementById('detectedVal').innerText = data.detected ? 'Fissure Detected' : 'No Structural Issue';
+                document.getElementById('widthVal').innerText = (data.pixel_span || 0) + ' mm';
+                document.getElementById('lengthVal').innerText = (data.length_mm || 0) + ' mm';
+                document.getElementById('depthVal').innerText = (data.depth_mm || 0) + ' mm';
+                // Add this single line inside your successful fetch response block
+                document.getElementById('aiAdvice').innerText = data.recommendations;
+                if (document.getElementById('areaVal')) {
+                    document.getElementById('areaVal').innerText = (data.area_mm2 || 0) + ' mm²';
+                }
+                
+                // SVG Semi-Circle Gauge Math
+                const gaugeFill = document.getElementById('gaugeFill');
+                const maxDash = 125.6;
+                const offset = maxDash - ((risk / 100) * maxDash);
+                
+                gaugeFill.style.strokeDashoffset = offset;
+                
+                if (risk > 60) {
+                    gaugeFill.style.stroke = "#ef4444"; // Red
+                } else if (risk > 30) {
+                    gaugeFill.style.stroke = "#f59e0b"; // Amber
+                } else {
+                    gaugeFill.style.stroke = "#10b981"; // Emerald
+                }
+
+                // Update Status Badge and Background
+                const badge = document.getElementById('statusBadge');
+                const badgeContainer = document.getElementById('statusBadgeContainer').parentElement;
+                
+                badge.innerText = statusText.toUpperCase();
+                
+                if (risk > 60) {
+                    badge.className = "inline-block px-6 py-2 rounded-full text-sm font-extrabold bg-red-600 text-white shadow-md";
+                    badgeContainer.className = "bg-red-50/50 rounded-2xl shadow-sm border border-red-100 p-6 text-center flex flex-col justify-center relative overflow-hidden";
+                    badgeContainer.firstElementChild.className = "absolute top-0 left-0 w-full h-1 bg-red-500";
+                } else if (risk > 30) {
+                    badge.className = "inline-block px-6 py-2 rounded-full text-sm font-extrabold bg-amber-500 text-white shadow-md";
+                    badgeContainer.className = "bg-amber-50/50 rounded-2xl shadow-sm border border-amber-100 p-6 text-center flex flex-col justify-center relative overflow-hidden";
+                    badgeContainer.firstElementChild.className = "absolute top-0 left-0 w-full h-1 bg-amber-400";
+                } else {
+                    badge.className = "inline-block px-6 py-2 rounded-full text-sm font-extrabold bg-emerald-500 text-white shadow-md";
+                    badgeContainer.className = "bg-emerald-50/50 rounded-2xl shadow-sm border border-emerald-100 p-6 text-center flex flex-col justify-center relative overflow-hidden";
+                    badgeContainer.firstElementChild.className = "absolute top-0 left-0 w-full h-1 bg-emerald-400";
+                }
+
+                // Update Images
+                document.getElementById('imgOriginal').src = data.original_image;
+                document.getElementById('imgOriginal').classList.remove('hidden');
+                document.getElementById('origPlaceholder').classList.add('hidden');
+
+                document.getElementById('imgProcessed').src = data.processed_image;
+                document.getElementById('imgProcessed').classList.remove('hidden');
+                document.getElementById('procPlaceholder').classList.add('hidden');
+
+            } catch (err) {
+                console.error(err);
+                alert("Server Error: Unable to complete analysis.");
+                document.getElementById('procPlaceholder').innerText = "Model Output Area";
+            }
+        }
+    </script>
+</body>
+</html>
